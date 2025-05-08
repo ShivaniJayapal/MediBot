@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MediBot | AI Medical Assistant</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #000000;
+      color: #ffffff;
+      line-height: 1.5;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 0;
+      border-bottom: 1px solid #333;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .logo-container h1 {
+      font-size: 1.5rem;
+      color: #0A84FF;
+    }
+
+    .chat-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .welcome-message {
+      background-color: #1C1C1E;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .welcome-message h2 {
+      color: #0A84FF;
+      margin-bottom: 1rem;
+    }
+
+    .welcome-message p {
+      color: #8E8E93;
+      margin-bottom: 1rem;
+    }
+
+    .welcome-message .disclaimer {
+      font-size: 0.875rem;
+      color: #666;
+    }
+
+    .messages-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .message {
+      display: flex;
+      flex-direction: column;
+      max-width: 80%;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .message.user {
+      align-self: flex-end;
+    }
+
+    .message.bot {
+      align-self: flex-start;
+    }
+
+    .message-bubble {
+      padding: 1rem;
+      border-radius: 1rem;
+      position: relative;
+    }
+
+    .message.user .message-bubble {
+      background-color: #0A84FF;
+      color: white;
+      border-bottom-right-radius: 0;
+    }
+
+    .message.bot .message-bubble {
+      background-color: #1C1C1E;
+      color: white;
+      border-bottom-left-radius: 0;
+    }
+
+    .message-timestamp {
+      font-size: 0.75rem;
+      color: #666;
+      margin-top: 0.25rem;
+    }
+
+    .input-container {
+      padding: 1rem 0;
+      border-top: 1px solid #333;
+    }
+
+    .input-wrapper {
+      display: flex;
+      background-color: #1C1C1E;
+      border-radius: 1rem;
+      padding: 0.5rem;
+      gap: 0.5rem;
+    }
+
+    #question-input {
+      flex: 1;
+      padding: 0.5rem 1rem;
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 1rem;
+    }
+
+    #question-input::placeholder {
+      color: #666;
+    }
+
+    #question-input:focus {
+      outline: none;
+    }
+
+    .send-button {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #0A84FF;
+      border: none;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s;
+    }
+
+    .send-button:hover {
+      background-color: #0070E0;
+    }
+
+    .thinking {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0.5rem 1rem;
+      background-color: #1C1C1E;
+      border-radius: 1rem;
+      width: fit-content;
+    }
+
+    .thinking-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #0A84FF;
+      border-radius: 50%;
+      animation: typing 1s infinite;
+    }
+
+    .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+    .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes typing {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    @media (max-width: 768px) {
+      .message {
+        max-width: 90%;
+      }
+      
+      .welcome-message {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="logo-container">
+        <h1>MediBot</h1>
+      </div>
+    </header>
+
+    <main class="chat-container" id="chat-container">
+      <div class="welcome-message">
+        <h2>Welcome to MediBot</h2>
+        <p>I'm your AI medical assistant. Ask me any health-related questions, and I'll provide information to help you make informed decisions about your health.</p>
+        <p class="disclaimer">Disclaimer: This AI assistant provides general medical information only and is not a substitute for professional medical advice, diagnosis, or treatment.</p>
+      </div>
+      
+      <div id="messages-container" class="messages-container"></div>
+    </main>
+
+    <footer class="input-container">
+      <div class="input-wrapper">
+        <input id="question-input" type="text" placeholder="Ask a medical question..." />
+        <button id="send-button" class="send-button">→</button>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    class ChatManager {
+      constructor() {
+        this.messagesContainer = document.getElementById('messages-container');
+        this.apiEndpoint = 'http://127.0.0.1:8000/ask';
+      }
+      
+      addUserMessage(text) {
+        const messageEl = this.createMessageElement('user', text);
+        this.messagesContainer.appendChild(messageEl);
+        this.scrollToBottom();
+        return messageEl;
+      }
+      
+      addBotMessage(text) {
+        const messageEl = this.createMessageElement('bot', text);
+        this.messagesContainer.appendChild(messageEl);
+        this.scrollToBottom();
+        return messageEl;
+      }
+      
+      showThinking() {
+        const thinkingEl = document.createElement('div');
+        thinkingEl.className = 'thinking';
+        thinkingEl.id = 'thinking-indicator';
+        
+        for (let i = 0; i < 3; i++) {
+          const dot = document.createElement('div');
+          dot.className = 'thinking-dot';
+          thinkingEl.appendChild(dot);
+        }
+        
+        this.messagesContainer.appendChild(thinkingEl);
+        this.scrollToBottom();
+        return thinkingEl;
+      }
+      
+      hideThinking() {
+        const thinkingEl = document.getElementById('thinking-indicator');
+        if (thinkingEl) {
+          thinkingEl.remove();
+        }
+      }
+      
+      createMessageElement(type, text) {
+        const messageEl = document.createElement('div');
+        messageEl.className = `message ${type}`;
+        
+        const bubbleEl = document.createElement('div');
+        bubbleEl.className = 'message-bubble';
+        bubbleEl.textContent = text;
+        
+        const timestampEl = document.createElement('div');
+        timestampEl.className = 'message-timestamp';
+        timestampEl.textContent = this.formatTimestamp(new Date());
+        
+        messageEl.appendChild(bubbleEl);
+        messageEl.appendChild(timestampEl);
+        
+        return messageEl;
+      }
+      
+      formatTimestamp(date) {
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+      }
+      
+      async sendMessage(question) {
+        try {
+          const response = await fetch(this.apiEndpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ question })
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Server responded with status: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          return data.answer || 'Sorry, I couldn\'t find an answer to your question.';
+        } catch (error) {
+          console.error('Error sending message:', error);
+          return 'Sorry, there was an error connecting to the server. Please try again later.';
+        }
+      }
+      
+      scrollToBottom() {
+        setTimeout(() => {
+          const chatContainer = document.getElementById('chat-container');
+          chatContainer.scrollTop = chatContainer.scrollHeight;
+        }, 100);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const questionInput = document.getElementById('question-input');
+      const sendButton = document.getElementById('send-button');
+      const chatManager = new ChatManager();
+      
+      async function handleSendMessage() {
+        const question = questionInput.value.trim();
+        
+        if (!question) {
+          return;
+        }
+        
+        questionInput.value = '';
+        chatManager.addUserMessage(question);
+        const thinkingIndicator = chatManager.showThinking();
+        
+        try {
+          const answer = await chatManager.sendMessage(question);
+          chatManager.hideThinking();
+          chatManager.addBotMessage(answer);
+        } catch (error) {
+          chatManager.hideThinking();
+          chatManager.addBotMessage('Sorry, there was an error. Please try again.');
+          console.error('Error:', error);
+        } finally {
+          questionInput.focus();
+        }
+      }
+      
+      sendButton.addEventListener('click', handleSendMessage);
+      
+      questionInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          handleSendMessage();
+        }
+      });
+      
+      setTimeout(() => {
+        questionInput.focus();
+      }, 500);
+    });
+  </script>
+</body>
+</html>
